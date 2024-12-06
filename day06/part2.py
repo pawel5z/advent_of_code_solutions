@@ -1,4 +1,4 @@
-from typing import List, Tuple, Set
+from typing import List, Tuple, Dict
 import itertools
 
 
@@ -40,22 +40,23 @@ def rotate_90_degrees(dir: Tuple[int, int]) -> Tuple[int, int]:
 def simulate_guard_path(map: List[List[str]]):
     pos = get_guard_position(map)
     dir = (-1, 0)
-
     width, height = len(map[0]), len(map)
 
-    steps_count = 0
+    # visited positions and directions assigned to them
+    visited: Dict[Tuple[int, int], Tuple[int, int]] = {}
+
     while True:
         map[pos[0]][pos[1]] = 'X'
         new_pos = (pos[0] + dir[0], pos[1] + dir[1])
         if not is_inside_map(new_pos, width, height):
             break
-        if steps_count >= width * height * 2:  # heavy heuristic, should be done better
-            raise LoopError
         if map[new_pos[0]][new_pos[1]] == '#':
             dir = rotate_90_degrees(dir)
             continue
         pos = new_pos
-        steps_count += 1
+        if pos in visited.keys() and dir == visited[pos]:
+            raise LoopError
+        visited[pos] = dir
 
 
 def count_obstacles_causing_loops(map: List[List[str]]) -> int:
