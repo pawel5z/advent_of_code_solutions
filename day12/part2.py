@@ -1,5 +1,6 @@
 from typing import List, Tuple, Dict, Set
 import operator
+import itertools
 
 
 def get_neighbours_of_same_type(garden: List[str], plot: Tuple[int, int]) -> List[Tuple[int, int]]:
@@ -16,27 +17,29 @@ def get_neighbours_of_same_type(garden: List[str], plot: Tuple[int, int]) -> Lis
     return result
 
 
-def get_neighbours_of_same_type_from_region(garden: List[str], plot: Tuple[int, int], region: Set[Tuple[int, int]]) -> Set[Tuple[int, int]]:
-    height = len(garden)
-    width = len(garden[0])
+def get_neighbouring_corners(plot: Tuple[int, int], height: int, width: int) -> List[Tuple[int, int]]:
     result = []
-    plot_type = garden[plot[0]][plot[1]]
 
-    for dr, dc in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+    for dr, dc in itertools.product([-1, 1], repeat=2):
         r, c = plot[0] + dr, plot[1] + dc
-        if 0 <= r < height and 0 <= c < width and garden[r][c] == plot_type and (r, c) in region:
+        if 0 <= r < height and 0 <= c < width:
             result.append((r, c))
 
     return result
 
 
-def get_neighbours(plot: Tuple[int, int], height: int, width: int) -> Set[Tuple[int, int]]:
-    result: Set[Tuple[int, int]] = set()
+def count_foreign_plots_between_neighbours(garden: List[str], plot: Tuple[int, int], neighbours: List[Tuple[int, int]]) -> int:
+    result = 0
+    plot_type = garden[plot[0]][plot[1]]
+    corner_neighbours = get_neighbouring_corners(plot, len(garden), len(garden[0]))
 
-    for dr, dc in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
-        r, c = plot[0] + dr, plot[1] + dc
-        if 0 <= r < height and 0 <= c < width:
-            result.add((r, c))
+    for n1, n2 in itertools.combinations(neighbours, 2):
+        for corner_neighbour in corner_neighbours:
+            if garden[corner_neighbour[0]][corner_neighbour[1]] == plot_type:
+                continue
+
+            if (n1[1] == corner_neighbour[1] and n2[0] == corner_neighbour[0]) or (n2[1] == corner_neighbour[1] and n1[0] == corner_neighbour[0]):
+                result += 1
 
     return result
 
@@ -59,21 +62,6 @@ def get_region(garden: List[str], start: Tuple[int, int]) -> Set[Tuple[int, int]
     return result
 
 
-def enlarge_region_by_one(region: Set[Tuple[int, int]], height: int, width: int) -> Set[Tuple[int, int]]:
-    result: Set[Tuple[int, int]] = set()
-
-    for r, c in region:
-        result.add((r, c))
-        for dr, dc in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < height and 0 <= nc < width:
-                result.add((nr, nc))
-
-    return result
-
-# TODO Identify which regions contain which.
-
-
 def count_region_sides(garden: List[str], region: Set[Tuple[int, int]]) -> int:
     """Which is equivalent to counting regions's corners!
 
@@ -84,21 +72,24 @@ def count_region_sides(garden: List[str], region: Set[Tuple[int, int]]) -> int:
     Returns:
         int: _description_
     """
-    if len(region) == 0:
+    if len(region) == 1:
         return 4
 
-    # enlarged_region = enlarge_region_by_one(region, len(garden), len(garden[0]))
     result = 0
 
     for r, c in region:
-        # neighbours = get_neighbours_of_same_type_from_region(garden, (r, c), enlarged_region)
         neighbours = get_neighbours_of_same_type(garden, (r, c))
         match len(neighbours):
             case 1:
                 result += 2
             case 2:
-                if neighbours[0][0] != neighbours[1][0] and neighbours[0][1] != neighbours[1][1]:
-                    result += 1
+                if neighbours[0][0] == neighbours[1][0] or neighbours[0][1] == neighbours[1][1]:
+                    continue
+
+                result += 1
+                result += count_foreign_plots_between_neighbours(garden, (r, c), neighbours)
+            case 3 | 4:
+                result += count_foreign_plots_between_neighbours(garden, (r, c), neighbours)
 
     return result
 
