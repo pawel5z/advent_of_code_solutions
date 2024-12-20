@@ -28,25 +28,13 @@ def get_cheats(board: List[List[str]]) -> Set[Tuple[Tuple[int, int], Tuple[int, 
     height, width = len(board), len(board[0])
 
     for (r1, c1), (r2, c2) in tqdm(product(product(range(height), range(width)), repeat=2)):
-        if not (1 <= abs(c2 - c1) + abs(r2 - r1) <= 19):
+        if not (2 <= abs(c2 - c1) + abs(r2 - r1) <= 20):
             continue
 
-        if board[r2][c2] == '#':
+        if board[r1][c1] == '#' or board[r2][c2] == '#':
             continue
 
         result.add(((r1, c1), (r2, c2)))
-
-    # for r1, row1 in enumerate(board):
-    #     for c1, cell1 in enumerate(row1):
-    #         for r2, row2 in enumerate(board):
-    #             for c2, cell2 in enumerate(row2):
-    #                 if not (1 <= abs(c2 - c1) + abs(r2 - r1) <= 1):
-    #                     continue
-
-    #                 if board[r2][c2] == '#':
-    #                     continue
-
-    #                 result.add(((r1, c1), (r2, c2)))
 
     return result
 
@@ -101,25 +89,12 @@ if __name__ == '__main__':
     height, width = len(board), len(board[0])
 
     for cheat_start, cheat_end in tqdm(all_cheats):
-        cheat_start_cost = inf
-
-        if cheat_start in costs.keys():
-            cheat_start_cost = costs[cheat_start]
-        else:
-            cheat_start_cost = min(
-                (costs[neighbour] for neighbour in get_neighbours(
-                    board, cheat_start, height, width) if neighbour != cheat_end),
-                default=inf) + 1
-
-        if cheat_start_cost == inf:
-            continue
-
-        cost_with_cheat = original_length - costs[cheat_end] + cheat_start_cost + \
+        cost_with_cheat = original_length - costs[cheat_end] + costs[cheat_start] + \
             abs(cheat_end[1] - cheat_start[1]) + abs(cheat_end[0] - cheat_start[0])
 
         delta = original_length - cost_with_cheat
 
-        if delta >= 50:
+        if delta >= 100:
             if delta not in cheat_stats.keys():
                 cheat_stats[delta] = 0
             cheat_stats[delta] += 1
@@ -127,7 +102,7 @@ if __name__ == '__main__':
             # print(stringify_board(cheated_board))
             # print()
 
-    for k in sorted(cheat_stats.keys()):
-        print(f'There are {cheat_stats[k]} cheats that save {k} picoseconds.')
+    # for k in sorted(cheat_stats.keys()):
+    #     print(f'There are {cheat_stats[k]} cheats that save {k} picoseconds.')
 
     print(result)
