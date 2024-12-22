@@ -148,6 +148,7 @@ if __name__ == '__main__':
             hover_pos = key_pos
 
         # print(''.join(numpad_moves))
+        # print(len(numpad_moves))
         hover_pos: Point = find_type(dpad, 'A')
         dpad1_moves: List[str] = []
 
@@ -159,6 +160,7 @@ if __name__ == '__main__':
             hover_pos = key_pos
 
         # print(''.join(dpad1_moves))
+        # print(len(dpad1_moves))
         hover_pos: Point = find_type(dpad, 'A')
         dpad2_moves: List[str] = []
 
@@ -169,6 +171,6 @@ if __name__ == '__main__':
             dpad2_moves.append('A')
             hover_pos = key_pos
 
-        print(''.join(dpad2_moves))
-        print(len(dpad2_moves))
+        # print(''.join(dpad2_moves))
+        # print(len(dpad2_moves))
         break
