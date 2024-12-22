@@ -76,6 +76,9 @@ def fw(board: List[List[str]]) -> Tuple[
                     dist[i, j] = dist[i, k] + dist[k, j]
                     prev[i, j] = prev[k, j]
 
+                    if not (i[0] == k[0] == j[0] or i[1] == k[1] == j[1]):
+                        dist[i, j] += 1
+
     return dist, prev
 
 
@@ -92,6 +95,22 @@ def reconstruct_path(start: Point, end: Point, prev: Dict[Tuple[Point, Point], O
         result.append(node)
 
     result.reverse()
+    return result
+
+
+def path_heuristic(path: List[Point]) -> int:
+    """Adds a penalty of each direction change along specified path.
+    """
+    if len(path) == 0:
+        return inf
+
+    result: int = 0
+
+    for i in range(len(path) - 2):
+        n1, n2, n3 = tuple(path[i:i + 3])
+        if not (n1[0] == n2[0] == n3[0] or n1[1] == n2[1] == n3[1]):
+            result += 1
+
     return result
 
 
@@ -135,6 +154,7 @@ if __name__ == '__main__':
     # print(numpad)
     dpad_dist, dpad_prev = fw(dpad)
     numpad_dist, numpad_prev = fw(numpad)
+    result: int = 0
 
     for code in map(lambda line: line.strip(), sys.stdin.readlines()):
         hover_pos: Point = find_type(numpad, 'A')
@@ -173,4 +193,6 @@ if __name__ == '__main__':
 
         # print(''.join(dpad2_moves))
         # print(len(dpad2_moves))
-        break
+        result += len(dpad2_moves) * get_numeric_part(code)
+
+    print(result)
