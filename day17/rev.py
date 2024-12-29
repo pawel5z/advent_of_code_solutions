@@ -37,6 +37,7 @@ if __name__ == '__main__':
             if ok:
                 break
 
+            output_fragment = puzzle_output_list[len(puzzle_output_list) - i - 1:]
             divisor = 2 ** (d ^ 1)
 
             for remainder in range(divisor):
@@ -46,9 +47,12 @@ if __name__ == '__main__':
                 # a_cand = (a << 3) + remainder
                 # a_cand = a + remainder
                 partial_output = run_equiv_puzzle_machine(a_cand)
-                output_fragment = puzzle_output_list[len(puzzle_output_list) - i - 1:]
+                new_d = a_cand % 8
+                new_divisor = 2 ** (new_d ^ 1)
 
-                if (d ^ 5 ^ (a_cand // divisor)) % 8 == output_digit and partial_output == output_fragment:
+                # if (new_d ^ 5 ^ (a_cand // divisor)) % 8 == output_digit and partial_output == output_fragment:
+                # if (new_d ^ 5 ^ (a_cand // new_divisor)) % 8 == output_digit:
+                if partial_output == output_fragment:
                     a = a_cand
                     ok = True
                     break
