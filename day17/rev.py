@@ -1,9 +1,13 @@
+"""Reconstructs the lowest possible A register value for which a machine
+defined in puzzle input prints itself.
+"""
+
 from typing import List, Dict, Set, Tuple
 import sys
 
 
 def run_equiv_puzzle_machine(a: int) -> List[int]:
-    """Equivalent of the puzzle machine.
+    """Equivalent of the machine from puzzle input.
     """
     result: List[int] = []
 
@@ -25,9 +29,6 @@ if __name__ == '__main__':
     rev_output = list(reversed(puzzle_output_list))
     # print(target_output)
 
-    # print(run_equiv_puzzle_machine(42))
-    # sys.exit()
-
     a = 0
 
     for i, output_digit in enumerate(rev_output):
@@ -37,22 +38,14 @@ if __name__ == '__main__':
             if ok:
                 break
 
-            output_fragment = puzzle_output_list[len(puzzle_output_list) - i - 1:]
             divisor = 2 ** (d ^ 1)
 
             for remainder in range(divisor):
-                # a_cand = (a << 3 | d)
                 a_cand = (a << 3 | d) + remainder
-                # a_cand = a * divisor + remainder
-                # a_cand = (a << 3) + remainder
-                # a_cand = a + remainder
-                partial_output = run_equiv_puzzle_machine(a_cand)
-                new_d = a_cand % 8
-                new_divisor = 2 ** (new_d ^ 1)
+                updated_d = a_cand % 8
+                updated_divisor = 2 ** (updated_d ^ 1)
 
-                # if (new_d ^ 5 ^ (a_cand // divisor)) % 8 == output_digit and partial_output == output_fragment:
-                # if (new_d ^ 5 ^ (a_cand // new_divisor)) % 8 == output_digit:
-                if partial_output == output_fragment:
+                if (updated_d ^ 5 ^ (a_cand // updated_divisor)) % 8 == output_digit:
                     a = a_cand
                     ok = True
                     break
