@@ -39,32 +39,32 @@ if __name__ == "__main__":
         key=lambda p: square_dist(boxes[p[0]], boxes[p[1]]),
     )
 
-    def find(e: int, sets: list[int]) -> int:
-        if e != sets[e]:
-            sets[e] = find(sets[e], sets)
-        return sets[e]
+    def find(e: int, parents: list[int]) -> int:
+        if e != parents[e]:
+            parents[e] = find(parents[e], parents)
+        return parents[e]
 
-    sets = list(range(n))
+    parents = list(range(n))
     conn_cnt = 0
     for b1, b2 in closest_pairs:
         if conn_cnt == TARGET_CONN_CNT:
             break
-        if find(b1, sets) == find(b2, sets):
+        print(boxes[b1], boxes[b2])
+        if find(b1, parents) == find(b2, parents):
+            print("^skip")
             continue
-        for i in range(n):
-            if find(i, sets) == find(b2, sets):
-                sets[i] = b1
+        parents[find(b2, parents)] = find(b1, parents)
         conn_cnt += 1
 
     for i in range(n):
-        print(f"{i}: {find(i, sets)}")
+        print(f"{i}: {find(i, parents)}")
 
     sizes = defaultdict(int)
     for e in range(n):
-        sizes[find(e, sets)] += 1
+        sizes[find(e, parents)] += 1
 
-    # for k, v in sizes.items():
-    #     print(k, v)
+    for k, v in sizes.items():
+        print(k, v)
 
     largest_sizes = []
     for _ in range(3):
