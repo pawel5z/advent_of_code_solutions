@@ -21,6 +21,12 @@ def square_dist(b1, b2):
     )
 
 
+def find(e: int, parents: list[int]) -> int:
+    if e != parents[e]:
+        parents[e] = find(parents[e], parents)
+    return parents[e]
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(f"Usage: <python> {sys.argv[0]} pair_count")
@@ -38,11 +44,6 @@ if __name__ == "__main__":
         combinations(range(n), r=2),
         key=lambda p: square_dist(boxes[p[0]], boxes[p[1]]),
     )
-
-    def find(e: int, parents: list[int]) -> int:
-        if e != parents[e]:
-            parents[e] = find(parents[e], parents)
-        return parents[e]
 
     parents = list(range(n))
     conn_cnt = 0
