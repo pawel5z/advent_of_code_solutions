@@ -27,6 +27,16 @@ def find(e: int, parents: list[int]) -> int:
     return parents[e]
 
 
+def print_sets(parents: list[int]):
+    n = len(parents)
+    sets = defaultdict(list)
+    for i in range(n):
+        sets[find(i, parents)].append(i)
+    for _, v in sets.items():
+        if len(v) > 1:
+            print(v)
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(f"Usage: <python> {sys.argv[0]} pair_count")
@@ -50,22 +60,22 @@ if __name__ == "__main__":
     for b1, b2 in closest_pairs:
         if conn_cnt == TARGET_CONN_CNT:
             break
-        print(boxes[b1], boxes[b2])
+        conn_cnt += 1
+        # print(f"--- {b1, b2} ---")
         if find(b1, parents) == find(b2, parents):
-            print("^skip")
             continue
         parents[find(b2, parents)] = find(b1, parents)
-        conn_cnt += 1
+        # print_sets(parents)
 
-    for i in range(n):
-        print(f"{i}: {find(i, parents)}")
+    # for i in range(n):
+    #     print(f"{i}: {find(i, parents)}")
 
     sizes = defaultdict(int)
     for e in range(n):
         sizes[find(e, parents)] += 1
 
-    for k, v in sizes.items():
-        print(k, v)
+    # for k, v in sizes.items():
+    #     print(k, v)
 
     largest_sizes = []
     for _ in range(3):
