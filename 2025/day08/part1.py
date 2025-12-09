@@ -1,5 +1,5 @@
-# python3 10 < example.input
-# python3 1000 < puzzle.input
+# python3 part1.py 10 < example.input
+# python3 part1.py 1000 < puzzle.input
 
 import sys
 import math
