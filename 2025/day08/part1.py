@@ -6,6 +6,7 @@ import math
 from itertools import combinations
 from operator import mul
 from functools import reduce
+from typing import defaultdict
 
 
 def square_dist(b1, b2):
@@ -27,46 +28,48 @@ if __name__ == "__main__":
 
     TARGET_CONN_CNT = int(sys.argv[1])
 
+    n = 0
     boxes: list[tuple[int, int, int]] = []
     for line in sys.stdin.readlines():
         boxes.append(tuple(map(int, line.strip().split(","))))
+        n += 1
 
     closest_pairs = sorted(
-        combinations(range(len(boxes)), r=2),
+        combinations(range(n), r=2),
         key=lambda p: square_dist(boxes[p[0]], boxes[p[1]]),
     )
-    # print(closest_pairs)
 
-    box_to_set = {b: {b} for b in range(len(boxes))}
+    def find(e: int, sets: list[int]) -> int:
+        if e != sets[e]:
+            sets[e] = find(sets[e], sets)
+        return sets[e]
+
+    sets = list(range(n))
     conn_cnt = 0
     for b1, b2 in closest_pairs:
         if conn_cnt == TARGET_CONN_CNT:
             break
-        if box_to_set[b1] is box_to_set[b2]:
+        if find(b1, sets) == find(b2, sets):
             continue
-        box_to_set[b1].update(box_to_set[b2])
-        for k in box_to_set:
-            if box_to_set[k] is box_to_set[b2]:
-                box_to_set[k] = box_to_set[b1]
+        for i in range(n):
+            if find(i, sets) == find(b2, sets):
+                sets[i] = b1
         conn_cnt += 1
 
-        # print(f"--- {b1, b2} ---")
-        # for k, v in box_to_set.items():
-        #     print(v)
+    for i in range(n):
+        print(f"{i}: {find(i, sets)}")
 
-    # for k, v in box_to_set.items():
-    #     print(v)
+    sizes = defaultdict(int)
+    for e in range(n):
+        sizes[find(e, sets)] += 1
+
+    # for k, v in sizes.items():
+    #     print(k, v)
 
     largest_sizes = []
     for _ in range(3):
-        b = max(box_to_set, key=lambda b1: len(box_to_set[b1]))
-        largest_sizes.append(len(box_to_set[b]))
-        b_set = box_to_set[b]
-        to_remove = []
-        for k, v in box_to_set.items():
-            if v is b_set:
-                to_remove.append(k)
-        for k in to_remove:
-            box_to_set.pop(k)
+        max_size_representative = max(sizes.keys(), key=lambda k: sizes[k])
+        largest_sizes.append(sizes[max_size_representative])
+        sizes.pop(max_size_representative)
 
     print(reduce(mul, largest_sizes, 1))
