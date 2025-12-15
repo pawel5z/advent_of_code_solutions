@@ -6,14 +6,21 @@ import heapq
 import math
 
 
-def unpress(state: tuple[int], transition: list[int]) -> list[int]:
+def max_allowed_press_count(state: tuple[int], transition: list[int]) -> int:
+    return math.ceil(min(state[i] for i in transition) / 2)
+
+
+def unpress(state: tuple[int], transition: list[int]) -> tuple[tuple[int], int]:
+    press_count = max_allowed_press_count(state, transition)
+    if press_count == 0:
+        return state, press_count
     ret = list(state)
     for i in transition:
-        ret[i] -= 1
-    return tuple(ret)
+        ret[i] -= press_count
+    return tuple(ret), press_count
 
 
-def predecessors(state: tuple[int], transitions: list[list[int]]) -> list[tuple[int]]:
+def predecessors(state: tuple[int], transitions: list[list[int]]) -> list[tuple[tuple[int], int]]:
     return [unpress(state, transition) for transition in transitions]
 
 
@@ -22,12 +29,16 @@ def least_press_count(dest: tuple[int], transitions: list[list[int]]) -> int:
 
     def aux(dest: tuple[int]) -> int:
         if dest in known_counts:
+            print(dest)
             return known_counts[dest]
         if any(v < 0 for v in dest):
             return math.inf
         if (all(v == 0 for v in dest)):
             return 0
-        result = min((aux(pred) for pred in predecessors(dest, transitions))) + 1
+        result = min(
+            (aux(pred) + press_count for pred, press_count in predecessors(dest, transitions) if press_count > 0),
+            default=math.inf
+        )
         known_counts[dest] = result
         return result
 
@@ -45,4 +56,5 @@ if __name__ == "__main__":
             transitions.append(list(map(int, transition_spec[1:-1].split(","))))
         press_count = least_press_count(target_state, transitions)
         total_presses += press_count
+        break
     print(total_presses)
