@@ -1,48 +1,54 @@
 import sys
-from functools import reduce
 from tqdm import tqdm
-from copy import deepcopy
-import heapq
-import math
+from typing import Iterator
 
 
-def max_allowed_press_count(state: tuple[int], transition: list[int]) -> int:
-    return math.ceil(min(state[i] for i in transition) / 2)
+def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
+    # max number of presses for each button
+    max_presses: list[int] = [min(dst[i] for i in button) for button in buttons]
 
+    # min number of presses for each button
+    min_presses: list[int] = []
+    for i in range(len(buttons)):
+        other_buttons = [] # buttons incrementing at least 1 common counter with button i
+        for j in range(len(buttons)):
+            if i == j:
+                continue
+            for influenced_counter_idx in buttons[j]:
+                if influenced_counter_idx in buttons[i]:
+                    other_buttons.append(j)
+                    break
 
-def unpress(state: tuple[int], transition: list[int]) -> tuple[tuple[int], int]:
-    press_count = max_allowed_press_count(state, transition)
-    if press_count == 0:
-        return state, press_count
-    ret = list(state)
-    for i in transition:
-        ret[i] -= press_count
-    return tuple(ret), press_count
-
-
-def predecessors(state: tuple[int], transitions: list[list[int]]) -> list[tuple[tuple[int], int]]:
-    return [unpress(state, transition) for transition in transitions]
-
-
-def least_press_count(dest: tuple[int], transitions: list[list[int]]) -> int:
-    known_counts: dict[tuple[int], int] = {}
-
-    def aux(dest: tuple[int]) -> int:
-        if dest in known_counts:
-            print(dest)
-            return known_counts[dest]
-        if any(v < 0 for v in dest):
-            return math.inf
-        if (all(v == 0 for v in dest)):
-            return 0
-        result = min(
-            (aux(pred) + press_count for pred, press_count in predecessors(dest, transitions) if press_count > 0),
-            default=math.inf
+        min_presses.append(
+            max(
+                0,
+                max_presses[i] - sum(map(lambda j: max_presses[j], other_buttons))
+            )
         )
-        known_counts[dest] = result
-        return result
+    # print([(min_presses[i], max_presses[i]) for i in range(len(buttons))])
 
-    return aux(dest)
+    # dst idx to list of buttons incrementing it
+    press_sources: list[list[int]] = []
+    for i in range(len(dst)):
+        press_sources.append([])
+        for button_idx, button in enumerate(buttons):
+            for counter_idx in button:
+                if counter_idx == i:
+                    press_sources[i].append(button_idx)
+    # print(press_sources)
+
+    # Mapping of button idx to selected number of presses. -1 means not defined yet.
+    initial_press_state: dict[int, int] = {i: -1 for i in range(len(buttons))}
+
+
+    def get_solutions(press_state: dict[int, int]) -> Iterator[dict[int, int]]:
+        # TODO
+        return
+
+
+    return min(
+        sum(v for v in solution.values()) for solution in get_solutions(initial_press_state)
+    )
 
 
 if __name__ == "__main__":
@@ -50,11 +56,11 @@ if __name__ == "__main__":
     for line in tqdm(sys.stdin.readlines()):
         specs = line.strip().split()
         target_state = tuple(map(int, specs[-1][1:-1].split(",")))
-        transition_specs = specs[1:-1]
-        transitions = []
-        for transition_spec in transition_specs:
-            transitions.append(list(map(int, transition_spec[1:-1].split(","))))
-        press_count = least_press_count(target_state, transitions)
+        button_specs = specs[1:-1]
+        buttons = []
+        for button_spec in button_specs:
+            buttons.append(list(map(int, button_spec[1:-1].split(","))))
+        press_count = least_press_count(target_state, buttons)
         total_presses += press_count
         break
     print(total_presses)
