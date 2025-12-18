@@ -2,26 +2,14 @@ import sys
 
 
 def compute_path_count(neighbors: dict[str, set[str]]) -> int:
-    preds: dict[str, set[str]] = {node: set() for node in neighbors}
-
     queue: list[str] = ["you"]
-    marked: set[str] = {"you"}
+    count = 0
     while queue:
         current = queue.pop(0)
-        for neighbor in neighbors[current]:
-            preds[neighbor].add(current)
-            if neighbor not in marked:
-                marked.add(neighbor)
-                queue.append(neighbor)
-
-    count = 0
-    stack: list[str] = ["out"]
-    while stack:
-        current = stack.pop()
-        if current == "you":
+        if current == "out":
             count += 1
-        for pred in preds[current]:
-            stack.append(pred)
+        for neighbor in neighbors[current]:
+            queue.append(neighbor)
 
     return count
 
