@@ -1,35 +1,63 @@
 import sys
 
 
-def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> int:
-    preds: dict[str, set[str]] = {node: set() for node in neighbors}
-
+def check_cycles(src: str, dest: str, neighbors: dict[str, set[str]]) -> bool:
     queue: list[str] = [src]
     marked: set[str] = {src}
     while queue:
+        current = queue.pop
+    # TODO
+
+
+def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> int:
+    queue: list[str] = [src]
+    # metadata contains number of paths respectively
+    # without dac and fft
+    # with dac
+    # with fft
+    # with both
+    node_meta: dict[str, tuple[int, int, int, int]] = {src: (1, 0, 0, 0)}
+    while queue:
         current = queue.pop(0)
+        no, dac, fft, both = node_meta[current]
+        # print(f"{current} {node_meta[current]}")
+
+        match current:
+            case "dac":
+                if fft:
+                    both += fft
+                    fft = 0
+                    # dac = 0
+                dac += no
+                no = 0
+            case "fft":
+                if dac:
+                    both += dac
+                    dac = 0
+                    # fft = 0
+                fft += no
+                no = 0
+        node_meta[current] = (no, dac, fft, both)
+        # print(f"{current} {node_meta[current]}")
+
         for neighbor in neighbors[current]:
-            preds[neighbor].add(current)
-            if neighbor not in marked:
-                marked.add(neighbor)
+            if neighbor in node_meta:
+                neighbor_meta = node_meta[neighbor]
+                node_meta[neighbor] = (
+                    neighbor_meta[0] + no,
+                    neighbor_meta[1] + dac,
+                    neighbor_meta[2] + fft,
+                    neighbor_meta[3] + both,
+                )
+            else:
                 queue.append(neighbor)
-    print("computed paths")
+                node_meta[neighbor] = (no, dac, fft, both)
 
-    count = 0
-    stack: list[tuple[str, bool, bool]] = [(dest, False, False)]
-    while stack:
-        current, visited_dac, visited_fft = stack.pop()
-        if current == src and visited_dac and visited_fft:
-            count += 1
-            print(count)
-        if current == "dac":
-            visited_dac = True
-        if current == "fft":
-            visited_fft = True
-        for pred in preds[current]:
-            stack.append((pred, visited_dac, visited_fft))
-
-    return count
+    # print(f"svr {node_meta["svr"]}")
+    # print(f"out {node_meta["out"]}")
+    # for k, v in sorted(node_meta.items()):
+    #     print(k, v)
+    return node_meta[dest][-1]
 
 
 if __name__ == "__main__":
