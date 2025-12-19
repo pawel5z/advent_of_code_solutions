@@ -1,12 +1,22 @@
 import sys
 
 
-def check_cycles(src: str, dest: str, neighbors: dict[str, set[str]]) -> bool:
-    queue: list[str] = [src]
-    marked: set[str] = {src}
-    while queue:
-        current = queue.pop
-    # TODO
+def check_cycle(neighbors: dict[str, set[str]]) -> bool:
+    visited: set[str] = set()
+    finished: set[str] = set()
+
+    def dfs(node: str) -> bool:
+        if node in finished:
+            return False
+        if node in visited:
+            return True # cycle found
+        visited.add(node)
+        for neighbor in neighbors[node]:
+            if dfs(neighbor):
+                return True
+        finished.add(node)
+
+    return any(dfs(node) for node in neighbors)
 
 
 def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> int:
@@ -66,5 +76,6 @@ if __name__ == "__main__":
         line = line.replace(":", "").split()
         neighbors[line[0]] = set(line[1:])
 
+    print(f"cycle present: {check_cycle(neighbors)}")
     print(f"device count: {len(neighbors)}")
     print(compute_path_count("svr", "out", neighbors))
