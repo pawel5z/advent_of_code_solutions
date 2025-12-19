@@ -1,24 +1,6 @@
 import sys
-from graph import count_paths
+from graph import count_paths, check_cycle
 from itertools import permutations
-
-
-def check_cycle(neighbors: dict[str, list[str]]) -> bool:
-    visited: set[str] = set()
-    finished: set[str] = set()
-
-    def dfs(node: str) -> bool:
-        if node in finished:
-            return False
-        if node in visited:
-            return True # cycle found
-        visited.add(node)
-        for neighbor in neighbors[node]:
-            if dfs(neighbor):
-                return True
-        finished.add(node)
-
-    return any(dfs(node) for node in neighbors)
 
 
 if __name__ == "__main__":
