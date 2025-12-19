@@ -9,15 +9,8 @@ if __name__ == "__main__":
         line = line.replace(":", "").split()
         neighbors[line[0]] = line[1:]
 
-    # for k, v in neighbors.items():
-    #     print(k, v)
-
     print(f"device count: {len(neighbors)}")
     print(f"cycle present: {check_cycle(neighbors)}")
-    # print(count_paths("svr", "out", neighbors))
-    print(count_paths("svr", "fft", neighbors))
-    print(count_paths("fft", "dac", neighbors))
-    print(count_paths("dac", "out", neighbors))
     print(sum(
         count_paths("svr", proxy1, neighbors)
         * count_paths(proxy1, proxy2, neighbors)

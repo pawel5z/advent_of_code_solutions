@@ -18,14 +18,36 @@ def check_cycle(neighbors: dict[str, list[str]]) -> bool:
 
 def count_paths(src: str, dst: str, neighbors: dict[str, list[str]]) -> int:
     path_counts: dict[str, int] = {src: 1}
-    queue: list[str] = [src]
+    queue: list[str] = topological_sort(neighbors)
+    queue = queue[queue.index(src):]
 
     while queue:
         current = queue.pop(0)
+        if current not in path_counts:
+            continue
         for neighbor in neighbors[current]:
             if neighbor not in path_counts:
-                queue.append(neighbor)
                 path_counts[neighbor] = 0
             path_counts[neighbor] += path_counts[current]
 
     return path_counts[dst] if dst in path_counts else 0
+
+
+def topological_sort(neighbors: dict[str, list[str]]) -> list[str]:
+    result: list[str] = []
+    processed: set[str] = set()
+    marked: set[str] = set()
+
+    def dfs(node: str):
+        marked.add(node)
+        for neighbor in neighbors[node]:
+            if neighbor not in marked:
+                dfs(neighbor)
+        processed.add(node)
+        result.append(node)
+
+    for node in neighbors:
+        if node not in processed:
+            dfs(node)
+    result.reverse()
+    return result
