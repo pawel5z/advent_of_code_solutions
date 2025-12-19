@@ -1,4 +1,4 @@
-def count_paths(src: str, dst: str, neighbors: dict[str, set[str]]) -> int:
+def count_paths(src: str, dst: str, neighbors: dict[str, list[str]]) -> int:
     path_counts: dict[str, int] = {src: 1}
     queue: list[str] = [src]
 
