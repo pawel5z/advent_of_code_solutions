@@ -11,11 +11,11 @@ def check_cycles(src: str, dest: str, neighbors: dict[str, set[str]]) -> bool:
 
 def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> int:
     queue: list[str] = [src]
-    # metadata contains number of paths respectively
+    # metadata contains number of paths going into a node, respectively:
     # without dac and fft
-    # with dac
-    # with fft
-    # with both
+    # with dac only
+    # with fft only
+    # with both dac and fft
     node_meta: dict[str, tuple[int, int, int, int]] = {src: (1, 0, 0, 0)}
     while queue:
         current = queue.pop(0)
