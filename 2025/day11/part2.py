@@ -27,12 +27,10 @@ def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> i
     # with fft only
     # with both dac and fft
     node_meta: dict[str, tuple[int, int, int, int]] = {src: (1, 0, 0, 0)}
-    while queue:
-        current = queue.pop(0)
-        no, dac, fft, both = node_meta[current]
-        # print(f"{current} {node_meta[current]}")
 
-        match current:
+    def recompute_node_meta(node: str) -> None:
+        no, dac, fft, both = node_meta[node]
+        match node:
             case "dac":
                 if fft:
                     both += fft
@@ -47,8 +45,11 @@ def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> i
                     # fft = 0
                 fft += no
                 no = 0
-        node_meta[current] = (no, dac, fft, both)
-        # print(f"{current} {node_meta[current]}")
+        node_meta[node] = (no, dac, fft, both)
+
+    while queue:
+        current = queue.pop(0)
+        no, dac, fft, both = node_meta[current]
 
         for neighbor in neighbors[current]:
             if neighbor in node_meta:
@@ -62,11 +63,8 @@ def compute_path_count(src: str, dest: str, neighbors: dict[str, set[str]]) -> i
             else:
                 queue.append(neighbor)
                 node_meta[neighbor] = (no, dac, fft, both)
+            recompute_node_meta(neighbor)
 
-    # print(f"svr {node_meta["svr"]}")
-    # print(f"out {node_meta["out"]}")
-    # for k, v in sorted(node_meta.items()):
-    #     print(k, v)
     return node_meta[dest][-1]
 
 
