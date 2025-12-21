@@ -87,6 +87,10 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         return min(max_presses[considered_button_idx], max_press)
 
 
+    def greatest_difference(c1: list[int], c2: list[int]) -> int:
+        return max(abs(c1[i] - c2[i]) for i in range(len(dst)))
+
+
     reached_bottom_count = 0
     solution_count = 0
     min_so_far = math.inf
@@ -94,17 +98,6 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         nonlocal reached_bottom_count
         nonlocal solution_count
         nonlocal min_so_far
-        if all(count >= 0 for count in press_state):
-            reached_bottom_count += 1
-            if get_counter_state(press_state) == dst:
-                solution_count += 1
-                min_so_far = min(min_so_far, sum(press_state))
-                # print(press_state)
-                yield press_state
-            else:
-                # print(press_state, sum(press_state), get_counter_state(press_state))
-                pass
-            return
 
         counter_idx, button_idx = get_unassigned_button_idx(press_state)
         refined_min_press = get_refined_min_press(counter_idx, button_idx, press_state)
@@ -113,12 +106,26 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
             candidate_press_state = list(press_state)
             candidate_press_state[button_idx] = candidate_press_count
             candidate_counter_state = get_counter_state(candidate_press_state)
-            if sum(v for v in candidate_press_state if v >= 0) >= min_so_far:
-                return
+            press_count = sum(v for v in candidate_press_state if v >= 0)
             if any(candidate_counter_state[i] > dst[i] for i in range(len(dst))):
                 # print(f">>> skipping {min(press_capacity, max_presses[button_idx]) - candidate_press_count + 1} calls")
                 return
-            yield from get_solutions(candidate_press_state)
+            if press_count + greatest_difference(candidate_counter_state, dst) >= min_so_far:
+                return
+            if all(count >= 0 for count in candidate_press_state):
+                reached_bottom_count += 1
+                if candidate_counter_state == dst:
+                    solution_count += 1
+                    if press_count <= min_so_far:
+                        min_so_far = min(min_so_far, press_count)
+                        yield candidate_press_state
+                        # print(f">>> {candidate_press_state, press_count, candidate_counter_state}")
+                        return
+                else:
+                    # print(candidate_press_state, press_count, candidate_counter_state)
+                    pass
+            else:
+                yield from get_solutions(candidate_press_state)
 
 
     max_counter = max(dst)
