@@ -115,14 +115,14 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
                 reached_bottom_count += 1
                 if candidate_counter_state == dst:
                     solution_count += 1
-                    if press_count <= min_so_far:
+                    if press_count < min_so_far:
                         min_so_far = min(min_so_far, press_count)
                         yield candidate_press_state
                         # print(f">>> {candidate_press_state, press_count, candidate_counter_state}")
-                        return
                 else:
                     # print(candidate_press_state, press_count, candidate_counter_state)
                     pass
+                return
             else:
                 yield from get_solutions(candidate_press_state)
 
