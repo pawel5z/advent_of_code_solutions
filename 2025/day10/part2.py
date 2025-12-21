@@ -140,13 +140,14 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
 
 if __name__ == "__main__":
     total_presses = 0
-    for line in tqdm(sys.stdin.readlines()):
+    for l, line in enumerate(tqdm(sys.stdin.readlines())):
         specs = line.strip().split()
         target_state = tuple(map(int, specs[-1][1:-1].split(",")))
         button_specs = specs[1:-1]
         buttons = []
         for button_spec in button_specs:
             buttons.append(list(map(int, button_spec[1:-1].split(","))))
+        print(f"{l+1})")
         press_count = least_press_count(target_state, buttons)
         total_presses += press_count
         # break
