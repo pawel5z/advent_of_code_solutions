@@ -1,6 +1,7 @@
 import sys
 from tqdm import tqdm
 from typing import Iterator
+import math
 
 
 def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
@@ -88,15 +89,21 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
 
     reached_bottom_count = 0
     solution_count = 0
+    min_so_far = math.inf
     def get_solutions(press_state: list[int]) -> Iterator[list[int]]:
         nonlocal reached_bottom_count
         nonlocal solution_count
+        nonlocal min_so_far
         if all(count >= 0 for count in press_state):
             reached_bottom_count += 1
             if get_counter_state(press_state) == dst:
                 solution_count += 1
+                min_so_far = min(min_so_far, sum(press_state))
                 # print(press_state)
                 yield press_state
+            else:
+                # print(press_state, sum(press_state), get_counter_state(press_state))
+                pass
             return
 
         counter_idx, button_idx = get_unassigned_button_idx(press_state)
@@ -106,6 +113,8 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
             candidate_press_state = list(press_state)
             candidate_press_state[button_idx] = candidate_press_count
             candidate_counter_state = get_counter_state(candidate_press_state)
+            if sum(v for v in candidate_press_state if v >= 0) >= min_so_far:
+                return
             if any(candidate_counter_state[i] > dst[i] for i in range(len(dst))):
                 # print(f">>> skipping {min(press_capacity, max_presses[button_idx]) - candidate_press_count + 1} calls")
                 return
