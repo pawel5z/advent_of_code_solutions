@@ -62,18 +62,6 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
                     return (counter_idx, button_idx)
 
 
-    def get_press_capacity(counter_idx: int, press_state: list[int]) -> int:
-        """Difference to target value of specified counter given specified press_state of buttons.
-        """
-        press_capacity = dst[counter_idx]
-        for button_idx in press_sources[counter_idx]:
-            if press_state[button_idx] == -1:
-                press_capacity -= min_presses[button_idx]
-            else:
-                press_capacity -= press_state[button_idx]
-        return press_capacity
-
-
     def get_refined_min_press(counter_idx: int, considered_button_idx: int, press_state: list[int]) -> int:
         min_press = dst[counter_idx]
         for button_idx in press_sources[counter_idx]:
@@ -83,6 +71,19 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
             else:
                 min_press -= press_state[button_idx]
         return max(0, min_press)
+
+
+    def get_refined_max_press(counter_idx: int, considered_button_idx: int, press_state: list[int]) -> int:
+        """Difference to target value of specified counter given specified press_state of buttons.
+        """
+        max_press = dst[counter_idx]
+        for button_idx in press_sources[counter_idx]:
+            if press_state[button_idx] == -1:
+                if button_idx != considered_button_idx:
+                    max_press -= min_presses[button_idx]
+            else:
+                max_press -= press_state[button_idx]
+        return min(max_presses[considered_button_idx], max_press)
 
 
     reached_bottom_count = 0
@@ -99,11 +100,9 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
             return
 
         counter_idx, button_idx = get_unassigned_button_idx(press_state)
-        target_value = dst[counter_idx]
-        # add min press count of considered button that was subtracted by get_press_capacity
-        press_capacity = get_press_capacity(counter_idx, press_state) + min_presses[button_idx]
         refined_min_press = get_refined_min_press(counter_idx, button_idx, press_state)
-        for candidate_press_count in range(refined_min_press, min(press_capacity, max_presses[button_idx]) + 1):
+        refined_max_press = get_refined_max_press(counter_idx, button_idx, press_state)
+        for candidate_press_count in range(refined_min_press, refined_max_press + 1):
             candidate_press_state = list(press_state)
             candidate_press_state[button_idx] = candidate_press_count
             candidate_counter_state = get_counter_state(candidate_press_state)
