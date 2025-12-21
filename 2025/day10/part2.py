@@ -62,28 +62,40 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
                     return (counter_idx, button_idx)
 
 
-    def get_refined_min_press(counter_idx: int, considered_button_idx: int, press_state: list[int]) -> int:
-        min_press = dst[counter_idx]
-        for button_idx in press_sources[counter_idx]:
-            if press_state[button_idx] == -1:
-                if button_idx != considered_button_idx:
-                    min_press -= max_presses[button_idx]
-            else:
-                min_press -= press_state[button_idx]
+    def get_refined_min_press(considered_button_idx: int, press_state: list[int]) -> int:
+        min_press = -1
+        for counter_idx in range(len(dst)):
+            if considered_button_idx not in press_sources[counter_idx]:
+                continue
+            min_press_candidate = dst[counter_idx]
+            for button_idx in press_sources[counter_idx]:
+                if press_state[button_idx] == -1:
+                    if button_idx != considered_button_idx:
+                        min_press_candidate -= max_presses[button_idx]
+                else:
+                    min_press_candidate -= press_state[button_idx]
+            min_press = max(min_press, min_press_candidate)
         return max(0, min_press)
 
 
-    def get_refined_max_press(counter_idx: int, considered_button_idx: int, press_state: list[int]) -> int:
+    def get_refined_max_press(considered_button_idx: int, press_state: list[int]) -> int:
         """Difference to target value of specified counter given specified press_state of buttons.
         """
-        max_press = dst[counter_idx]
-        for button_idx in press_sources[counter_idx]:
-            if press_state[button_idx] == -1:
-                if button_idx != considered_button_idx:
-                    max_press -= min_presses[button_idx]
-            else:
-                max_press -= press_state[button_idx]
-        return min(max_presses[considered_button_idx], max_press)
+        max_press = math.inf
+        for counter_idx in range(len(dst)):
+            if considered_button_idx not in press_sources[counter_idx]:
+                continue
+            max_press_candidate = dst[counter_idx]
+            for button_idx in press_sources[counter_idx]:
+                if press_state[button_idx] == -1:
+                    if button_idx != considered_button_idx:
+                        max_press_candidate -= min_presses[button_idx]
+                else:
+                    max_press_candidate -= press_state[button_idx]
+            max_press_candidate = min(max_presses[considered_button_idx], max_press_candidate)
+            max_press = min(max_press, max_press_candidate)
+        return max_press
+        # return min(max_presses[considered_button_idx], max_press_candidate)
 
 
     def greatest_difference(c1: list[int], c2: list[int]) -> int:
@@ -99,8 +111,8 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         nonlocal min_so_far
 
         counter_idx, button_idx = get_unassigned_button_idx(press_state)
-        refined_min_press = get_refined_min_press(counter_idx, button_idx, press_state)
-        refined_max_press = get_refined_max_press(counter_idx, button_idx, press_state)
+        refined_min_press = get_refined_min_press(button_idx, press_state)
+        refined_max_press = get_refined_max_press(button_idx, press_state)
         for candidate_press_count in range(refined_min_press, refined_max_press + 1):
             candidate_press_state = list(press_state)
             candidate_press_state[button_idx] = candidate_press_count
