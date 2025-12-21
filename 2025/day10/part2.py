@@ -57,7 +57,7 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         # Starting with buttons incrementing counters having the lowest target value,
         # find the first button with unassigned value.
         for counter_idx in sorted(range(len(dst)), key=lambda counter_idx: dst[counter_idx]):
-            for button_idx in press_sources[counter_idx]:
+            for button_idx in sorted(press_sources[counter_idx], key=lambda b: len(buttons[b]), reverse=True):
                 if press_state[button_idx] == -1:
                     return (counter_idx, button_idx)
 
