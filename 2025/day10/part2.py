@@ -112,9 +112,12 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
             yield from get_solutions(candidate_press_state)
 
 
-    result = min(
-        sum(press_count for press_count in solution) for solution in get_solutions(initial_press_state)
-    )
+    max_counter = max(dst)
+    result = math.inf
+    for solution in get_solutions(initial_press_state):
+        result = min(result, sum(solution))
+        if result == max_counter:
+            break
     print(f"bottom reached {reached_bottom_count} times")
     print(f"solution reached {solution_count} times")
     return result
