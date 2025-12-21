@@ -37,17 +37,59 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
                     press_sources[i].append(button_idx)
     # print(press_sources)
 
-    # Mapping of button idx to selected number of presses. -1 means not defined yet.
-    initial_press_state: dict[int, int] = {i: -1 for i in range(len(buttons))}
+    # Button idx to selected number of presses. -1 means not defined yet.
+    initial_press_state: list[int] = [-1] * len(buttons)
 
 
-    def get_solutions(press_state: dict[int, int]) -> Iterator[dict[int, int]]:
-        # TODO
-        return
+    def get_counter_state(press_state: list[int]) -> tuple[int]:
+        assert(all(count >= 0 for count in press_state))
+        counters = [0] * len(dst)
+        for button_idx, count in enumerate(press_state):
+            for counter_idx in buttons[button_idx]:
+                counters[counter_idx] += count
+        return tuple(counters)
+
+
+    def get_unassigned_button_idx(press_state: list[int]) -> tuple[int, int]:
+        # Fail-fast strategy.
+        # Starting with buttons incrementing counters having the lowest target value,
+        # find the first button with unassigned value.
+        for counter_idx in sorted(range(len(dst)), key=lambda counter_idx: dst[counter_idx]):
+            for button_idx in press_sources[counter_idx]:
+                if press_state[button_idx] == -1:
+                    return (counter_idx, button_idx)
+
+
+    def get_press_capacity(counter_idx, press_state: list[int]) -> int:
+        press_capacity = dst[counter_idx]
+        for button_idx in press_sources[counter_idx]:
+            if press_state[button_idx] == -1:
+                press_capacity -= min_presses[button_idx]
+            else:
+                press_capacity -= press_state[button_idx]
+        return press_capacity
+
+
+    def get_solutions(press_state: list[int]) -> Iterator[list[int]]:
+        if all(count >= 0 for count in press_state):
+            if get_counter_state(press_state) == dst:
+                yield press_state
+            return
+
+        counter_idx, button_idx = get_unassigned_button_idx(press_state)
+        target_value = dst[counter_idx]
+        # add min press count of considered button that was subtracted by get_press_capacity
+        press_capacity = get_press_capacity(counter_idx, press_state) + min_presses[button_idx]
+        if press_capacity < min_presses[button_idx]:
+            return
+        for candidate_press_count in range(min_presses[button_idx], min(press_capacity, max_presses[button_idx]) + 1):
+            candidate_press_state = list(press_state)
+            candidate_press_state[button_idx] = candidate_press_count
+            yield from get_solutions(candidate_press_state)
 
 
     return min(
-        sum(v for v in solution.values()) for solution in get_solutions(initial_press_state)
+        sum(press_count for press_count in solution) for solution in get_solutions(initial_press_state)
     )
 
 
@@ -62,5 +104,5 @@ if __name__ == "__main__":
             buttons.append(list(map(int, button_spec[1:-1].split(","))))
         press_count = least_press_count(target_state, buttons)
         total_presses += press_count
-        break
+        # break
     print(total_presses)
