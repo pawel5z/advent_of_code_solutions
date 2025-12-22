@@ -66,14 +66,17 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         return max(abs(c1[i] - c2[i]) for i in range(len(dst)))
 
 
+    call_count = 0
     reached_bottom_count = 0
     solution_count = 0
     min_so_far = math.inf
     def get_solutions(press_state: list[int]) -> Iterator[list[int]]:
+        nonlocal call_count
         nonlocal reached_bottom_count
         nonlocal solution_count
         nonlocal min_so_far
 
+        call_count += 1
         max_presses = get_max_press_list(press_state)
         min_presses = get_min_press_list(press_state, max_presses)
         # button_idx = sorted(( for i in range(len(buttons)) if press_state[i] == -1))[0]
@@ -119,6 +122,7 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         result = min(result, sum(solution))
         if result == max_counter:
             break
+    print(f"number of calls: {call_count}")
     print(f"bottom reached {reached_bottom_count} times")
     print(f"solution reached {solution_count} times")
     return result
