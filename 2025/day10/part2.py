@@ -5,29 +5,6 @@ import math
 
 
 def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
-    # max number of presses for each button
-    max_presses: list[int] = [min(dst[i] for i in button) for button in buttons]
-
-    # min number of presses for each button
-    min_presses: list[int] = []
-    for i in range(len(buttons)):
-        other_buttons = [] # buttons incrementing at least 1 common counter with button i
-        for j in range(len(buttons)):
-            if i == j:
-                continue
-            for influenced_counter_idx in buttons[j]:
-                if influenced_counter_idx in buttons[i]:
-                    other_buttons.append(j)
-                    break
-
-        min_presses.append(
-            max(
-                0,
-                max_presses[i] - sum(map(lambda j: max_presses[j], other_buttons))
-            )
-        )
-    # print([(min_presses[i], max_presses[i]) for i in range(len(buttons))])
-
     # dst idx to list of buttons incrementing it
     press_sources: list[list[int]] = []
     for i in range(len(dst)):
@@ -37,9 +14,6 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
                 if counter_idx == i:
                     press_sources[i].append(button_idx)
     # print(press_sources)
-
-    # Button idx to selected number of presses. -1 means not defined yet.
-    initial_press_state: list[int] = [-1] * len(buttons)
 
 
     def get_counter_state(press_state: list[int]) -> tuple[int]:
@@ -53,49 +27,39 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         return tuple(counters)
 
 
-    def get_unassigned_button_idx(press_state: list[int]) -> tuple[int, int]:
-        # Prioritize buttons belonging to counter that are incremented by the smallest number of buttons.
-        # Within such set of buttons prioritize the ones incrementing the most counters with single press.
-        for counter_idx in sorted(range(len(press_sources)), key=lambda counter_idx: len(press_sources[counter_idx])):
-            for button_idx in sorted(press_sources[counter_idx], key=lambda b: len(buttons[b]), reverse=False):
-                if press_state[button_idx] == -1:
-                    return (counter_idx, button_idx)
+    def get_max_press_list(press_state: list[int]) -> list[int]:
+        result: list[int] = []
+        for considered_button_idx in range(len(buttons)):
+            max_press = math.inf
+            for counter_idx, press_source in enumerate(press_sources):
+                if considered_button_idx not in press_source:
+                    continue
+                max_press_candidate = dst[counter_idx]
+                for button_idx in press_source:
+                    if press_state[button_idx] != -1:
+                        max_press_candidate -= press_state[button_idx]
+                max_press = min(max_press, max_press_candidate)
+            result.append(max_press)
+        return result
 
 
-    def get_refined_min_press(considered_button_idx: int, press_state: list[int]) -> int:
-        min_press = -1
-        for counter_idx in range(len(dst)):
-            if considered_button_idx not in press_sources[counter_idx]:
-                continue
-            min_press_candidate = dst[counter_idx]
-            for button_idx in press_sources[counter_idx]:
-                if press_state[button_idx] == -1:
-                    if button_idx != considered_button_idx:
-                        min_press_candidate -= max_presses[button_idx]
-                else:
-                    min_press_candidate -= press_state[button_idx]
-            min_press = max(min_press, min_press_candidate)
-        return max(0, min_press)
-
-
-    def get_refined_max_press(considered_button_idx: int, press_state: list[int]) -> int:
-        """Difference to target value of specified counter given specified press_state of buttons.
-        """
-        max_press = math.inf
-        for counter_idx in range(len(dst)):
-            if considered_button_idx not in press_sources[counter_idx]:
-                continue
-            max_press_candidate = dst[counter_idx]
-            for button_idx in press_sources[counter_idx]:
-                if press_state[button_idx] == -1:
-                    if button_idx != considered_button_idx:
-                        max_press_candidate -= min_presses[button_idx]
-                else:
-                    max_press_candidate -= press_state[button_idx]
-            max_press_candidate = min(max_presses[considered_button_idx], max_press_candidate)
-            max_press = min(max_press, max_press_candidate)
-        return max_press
-        # return min(max_presses[considered_button_idx], max_press_candidate)
+    def get_min_press_list(press_state: list[int], max_presses: list[int]) -> list[int]:
+        result: list[int] = []
+        for considered_button_idx in range(len(buttons)):
+            min_press = 0
+            for counter_idx, press_source in enumerate(press_sources):
+                if considered_button_idx not in press_source:
+                    continue
+                min_press_candidate = dst[counter_idx]
+                for button_idx in press_source:
+                    if press_state[button_idx] == -1:
+                        if button_idx != considered_button_idx:
+                            min_press_candidate -= max_presses[button_idx]
+                    else:
+                        min_press_candidate -= press_state[button_idx]
+                min_press = max(min_press, min_press_candidate)
+            result.append(min_press)
+        return result
 
 
     def greatest_difference(c1: list[int], c2: list[int]) -> int:
@@ -110,13 +74,22 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
         nonlocal solution_count
         nonlocal min_so_far
 
-        counter_idx, button_idx = get_unassigned_button_idx(press_state)
-        refined_min_press = get_refined_min_press(button_idx, press_state)
-        refined_max_press = get_refined_max_press(button_idx, press_state)
-        for candidate_press_count in range(refined_min_press, refined_max_press + 1):
+        max_presses = get_max_press_list(press_state)
+        min_presses = get_min_press_list(press_state, max_presses)
+        # button_idx = sorted(( for i in range(len(buttons)) if press_state[i] == -1))[0]
+        button_idx = min(
+            (i for i in range(len(buttons)) if press_state[i] == -1),
+            # key=lambda i: (min(dst[j] for j in buttons[i]), (max_presses[i] - min_presses[i]), len(buttons[i])), # ok
+            # key=lambda i: ((max_presses[i] - min_presses[i]), min(dst[j] for j in buttons[i]), len(buttons[i])), # better
+            key=lambda i: ((max_presses[i] - min_presses[i]), len(buttons[i]), min(dst[j] for j in buttons[i])), # best so far
+        )
+        # print(f"currently {get_counter_state(press_state)}")
+        # print(f"incrementing {buttons[button_idx]}; considering presses from {refined_min_press} to {refined_max_press}")
+        for candidate_press_count in range(min_presses[button_idx], max_presses[button_idx] + 1):
             candidate_press_state = list(press_state)
             candidate_press_state[button_idx] = candidate_press_count
             candidate_counter_state = get_counter_state(candidate_press_state)
+            # print(candidate_counter_state)
             press_count = sum(v for v in candidate_press_state if v >= 0)
             if any(candidate_counter_state[i] > dst[i] for i in range(len(dst))):
                 # print(f">>> skipping {min(press_capacity, max_presses[button_idx]) - candidate_press_count + 1} calls")
@@ -125,6 +98,7 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
                 return
             if all(count >= 0 for count in candidate_press_state):
                 reached_bottom_count += 1
+                # print(candidate_counter_state)
                 if candidate_counter_state == dst:
                     solution_count += 1
                     if press_count < min_so_far:
@@ -141,7 +115,7 @@ def least_press_count(dst: tuple[int], buttons: list[list[int]]) -> int:
 
     max_counter = max(dst)
     result = math.inf
-    for solution in get_solutions(initial_press_state):
+    for solution in get_solutions([-1] * len(buttons)):
         result = min(result, sum(solution))
         if result == max_counter:
             break
@@ -162,5 +136,5 @@ if __name__ == "__main__":
         print(f"{l+1})")
         press_count = least_press_count(target_state, buttons)
         total_presses += press_count
-        # break
+        break
     print(total_presses)
